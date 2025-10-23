@@ -161,7 +161,8 @@ impl AxumVisitor {
             let handler_name = if expr.args.len() > 1 {
                 self.extract_handler_name_from_expr(&expr.args[1])
             } else {
-                "unknown".to_string()
+                // It is not a route.
+                return None;
             };
             let mut route = RouteInfo::new(full_path.clone(), method, handler_name);
             route.parameters = self.extract_path_parameters(&full_path);
@@ -169,9 +170,14 @@ impl AxumVisitor {
         } else {
             // .get(handler) style - path comes from parent context
             let handler_name = self.extract_handler_name_from_expr(&expr.args[0]);
-            let mut route = RouteInfo::new(prefix.to_string(), method, handler_name);
-            route.parameters = self.extract_path_parameters(prefix);
-            Some(route)
+            if prefix.len() < 1 {
+                warn!("Ignored handler with 0-length path: {}", handler_name);
+                None
+            } else {
+                let mut route = RouteInfo::new(prefix.to_string(), method, handler_name);
+                route.parameters = self.extract_path_parameters(prefix);
+                Some(route)
+            }
         }
     }
 

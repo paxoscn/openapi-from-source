@@ -1,0 +1,28 @@
+[package]
+name = "rust-openapi-generator"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rust_openapi_generator"
+path = "src/lib.rs"
+
+[dependencies]
+syn = { version = "2.0", features = ["full", "extra-traits", "visit"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+clap = { version = "4.5", features = ["derive"] }
+walkdir = "2.5"
+anyhow = "1.0"
+log = "0.4"
+env_logger = "0.11"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
+tempfile = "3.10"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

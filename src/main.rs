@@ -7,24 +7,24 @@
 //! # Usage
 //!
 //! ```bash
-//! openapi-generator [OPTIONS] <PROJECT_PATH>
+//! openapi-from-source [OPTIONS] <PROJECT_PATH>
 //! ```
 //!
 //! # Examples
 //!
 //! Generate YAML documentation:
 //! ```bash
-//! openapi-generator ./my-api-project -o openapi.yaml
+//! openapi-from-source ./my-api-project -o openapi.yaml
 //! ```
 //!
 //! Generate JSON documentation:
 //! ```bash
-//! openapi-generator ./my-api-project -f json -o openapi.json
+//! openapi-from-source ./my-api-project -f json -o openapi.json
 //! ```
 //!
 //! Enable verbose logging:
 //! ```bash
-//! openapi-generator ./my-api-project -v
+//! openapi-from-source ./my-api-project -v
 //! ```
 
 mod cli;

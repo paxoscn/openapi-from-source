@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 /// Rust OpenAPI Generator - Automatically generate OpenAPI documentation from Rust web projects
 #[derive(Parser, Debug)]
-#[command(name = "openapi-generator")]
+#[command(name = "openapi-from-source")]
 #[command(author, version, about, long_about = None)]
 pub struct CliArgs {
     /// Path to the Rust project directory

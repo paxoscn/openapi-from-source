@@ -29,10 +29,10 @@ use std::path::Path;
 /// # Example
 ///
 /// ```ignore
-/// use openapi_generator::openapi_builder::OpenApiBuilder;
-/// use openapi_generator::serializer::serialize_yaml;
-/// use openapi_generator::schema_generator::SchemaGenerator;
-/// use openapi_generator::type_resolver::TypeResolver;
+/// use openapi_from_source::openapi_builder::OpenApiBuilder;
+/// use openapi_from_source::serializer::serialize_yaml;
+/// use openapi_from_source::schema_generator::SchemaGenerator;
+/// use openapi_from_source::type_resolver::TypeResolver;
 ///
 /// let builder = OpenApiBuilder::new();
 /// let type_resolver = TypeResolver::new(vec![]);
@@ -67,10 +67,10 @@ pub fn serialize_yaml(doc: &OpenApiDocument) -> Result<String> {
 /// # Example
 ///
 /// ```ignore
-/// use openapi_generator::openapi_builder::OpenApiBuilder;
-/// use openapi_generator::serializer::serialize_json;
-/// use openapi_generator::schema_generator::SchemaGenerator;
-/// use openapi_generator::type_resolver::TypeResolver;
+/// use openapi_from_source::openapi_builder::OpenApiBuilder;
+/// use openapi_from_source::serializer::serialize_json;
+/// use openapi_from_source::schema_generator::SchemaGenerator;
+/// use openapi_from_source::type_resolver::TypeResolver;
 ///
 /// let builder = OpenApiBuilder::new();
 /// let type_resolver = TypeResolver::new(vec![]);

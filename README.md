@@ -22,17 +22,17 @@ A command-line tool that automatically generates OpenAPI 3.0 documentation from 
 ### From Source
 
 ```bash
-git clone https://github.com/paxoscn/openapi-generator.git
-cd openapi-generator
+git clone https://github.com/paxoscn/openapi-from-source.git
+cd openapi-from-source
 cargo build --release
 ```
 
-The binary will be available at `target/release/openapi-generator`.
+The binary will be available at `target/release/openapi-from-source`.
 
 ### Using Cargo Install
 
 ```bash
-cargo install openapi-generator
+cargo install openapi-from-source
 ```
 
 ## Usage
@@ -42,7 +42,7 @@ cargo install openapi-generator
 Generate OpenAPI documentation for your Rust project:
 
 ```bash
-openapi-generator /path/to/your/project
+openapi-from-source /path/to/your/project
 ```
 
 This will output the OpenAPI document in YAML format to stdout.
@@ -50,7 +50,7 @@ This will output the OpenAPI document in YAML format to stdout.
 ### Command-Line Options
 
 ```
-Usage: openapi-generator [OPTIONS] <PROJECT_PATH>
+Usage: openapi-from-source [OPTIONS] <PROJECT_PATH>
 
 Arguments:
   <PROJECT_PATH>  Path to the Rust project directory
@@ -70,31 +70,31 @@ Options:
 #### Generate YAML output to a file
 
 ```bash
-openapi-generator ./my-api-project -o openapi.yaml
+openapi-from-source ./my-api-project -o openapi.yaml
 ```
 
 #### Generate JSON output
 
 ```bash
-openapi-generator ./my-api-project -f json -o openapi.json
+openapi-from-source ./my-api-project -f json -o openapi.json
 ```
 
 #### Specify framework explicitly
 
 ```bash
-openapi-generator ./my-api-project -w axum -o openapi.yaml
+openapi-from-source ./my-api-project -w axum -o openapi.yaml
 ```
 
 #### Enable verbose logging
 
 ```bash
-openapi-generator ./my-api-project -v
+openapi-from-source ./my-api-project -v
 ```
 
 #### Output to stdout and pipe to another tool
 
 ```bash
-openapi-generator ./my-api-project | yq eval '.'
+openapi-from-source ./my-api-project | yq eval '.'
 ```
 
 ## How It Works

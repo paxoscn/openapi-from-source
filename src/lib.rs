@@ -25,7 +25,7 @@
 //! # Example Usage
 //!
 //! ```no_run
-//! use openapi_generator::{
+//! use openapi_from_source::{
 //!     scanner::FileScanner,
 //!     parser::AstParser,
 //!     detector::FrameworkDetector,

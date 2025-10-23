@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 /// # Example
 ///
 /// ```no_run
-/// use openapi_generator::scanner::FileScanner;
+/// use openapi_from_source::scanner::FileScanner;
 /// use std::path::PathBuf;
 ///
 /// let scanner = FileScanner::new(PathBuf::from("./my-project"));

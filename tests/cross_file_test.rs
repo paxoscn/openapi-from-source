@@ -1,6 +1,6 @@
 // Test to verify cross-file function resolution works
-use openapi_generator::extractor::{RouteExtractor, axum::AxumExtractor};
-use openapi_generator::parser::ParsedFile;
+use openapi_from_source::extractor::{RouteExtractor, axum::AxumExtractor};
+use openapi_from_source::parser::ParsedFile;
 use std::path::PathBuf;
 
 #[test]

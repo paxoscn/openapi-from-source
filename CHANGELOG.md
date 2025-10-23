@@ -67,5 +67,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - May not accurately infer all response types
 - Circular type references use placeholder schemas
 
-[Unreleased]: https://github.com/paxoscn/openapi-generator/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/paxoscn/openapi-generator/releases/tag/v0.1.0
+[Unreleased]: https://github.com/paxoscn/openapi-from-source/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/paxoscn/openapi-from-source/releases/tag/v0.1.0

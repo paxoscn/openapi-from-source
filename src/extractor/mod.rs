@@ -12,8 +12,8 @@
 //! # Example
 //!
 //! ```no_run
-//! use openapi_generator::extractor::{RouteExtractor, axum::AxumExtractor};
-//! use openapi_generator::parser::AstParser;
+//! use openapi_from_source::extractor::{RouteExtractor, axum::AxumExtractor};
+//! use openapi_from_source::parser::AstParser;
 //! use std::path::Path;
 //!
 //! let parsed = AstParser::parse_file(Path::new("src/main.rs")).unwrap();

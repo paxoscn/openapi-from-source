@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 /// # Example
 ///
 /// ```no_run
-/// use rust_openapi_generator::scanner::FileScanner;
+/// use openapi_generator::scanner::FileScanner;
 /// use std::path::PathBuf;
 ///
 /// let scanner = FileScanner::new(PathBuf::from("./my-project"));

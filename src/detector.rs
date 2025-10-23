@@ -41,8 +41,8 @@ impl FrameworkDetector {
     /// # Example
     ///
     /// ```no_run
-    /// use rust_openapi_generator::detector::FrameworkDetector;
-    /// use rust_openapi_generator::parser::AstParser;
+    /// use openapi_generator::detector::FrameworkDetector;
+    /// use openapi_generator::parser::AstParser;
     /// use std::path::Path;
     ///
     /// let parsed = AstParser::parse_file(Path::new("src/main.rs")).unwrap();

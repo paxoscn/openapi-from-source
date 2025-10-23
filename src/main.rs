@@ -7,24 +7,24 @@
 //! # Usage
 //!
 //! ```bash
-//! rust-openapi-generator [OPTIONS] <PROJECT_PATH>
+//! openapi-generator [OPTIONS] <PROJECT_PATH>
 //! ```
 //!
 //! # Examples
 //!
 //! Generate YAML documentation:
 //! ```bash
-//! rust-openapi-generator ./my-api-project -o openapi.yaml
+//! openapi-generator ./my-api-project -o openapi.yaml
 //! ```
 //!
 //! Generate JSON documentation:
 //! ```bash
-//! rust-openapi-generator ./my-api-project -f json -o openapi.json
+//! openapi-generator ./my-api-project -f json -o openapi.json
 //! ```
 //!
 //! Enable verbose logging:
 //! ```bash
-//! rust-openapi-generator ./my-api-project -v
+//! openapi-generator ./my-api-project -v
 //! ```
 
 mod cli;

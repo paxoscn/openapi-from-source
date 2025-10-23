@@ -1,11 +1,13 @@
 [package]
-name = "rust-openapi-generator"
-version = "0.1.6"
+name = "openapi-generator"
+version = "0.1.7"
 edition = "2021"
-repository = "https://github.com/paxoscn/openapi-from-source.git"
+description = "Generates OpenAPI document in YAML/JSON from RUST source code using Axum or Actix-Web"
+license = "MIT"
+repository = "https://github.com/paxoscn/openapi-generator.git"
 
 [lib]
-name = "rust_openapi_generator"
+name = "openapi_generator"
 path = "src/lib.rs"
 
 [dependencies]

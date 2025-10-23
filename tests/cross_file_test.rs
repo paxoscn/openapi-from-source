@@ -1,6 +1,6 @@
 // Test to verify cross-file function resolution works
-use rust_openapi_generator::extractor::{RouteExtractor, axum::AxumExtractor};
-use rust_openapi_generator::parser::ParsedFile;
+use openapi_generator::extractor::{RouteExtractor, axum::AxumExtractor};
+use openapi_generator::parser::ParsedFile;
 use std::path::PathBuf;
 
 #[test]

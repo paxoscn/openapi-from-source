@@ -25,7 +25,7 @@
 //! # Example Usage
 //!
 //! ```no_run
-//! use rust_openapi_generator::{
+//! use openapi_generator::{
 //!     scanner::FileScanner,
 //!     parser::AstParser,
 //!     detector::FrameworkDetector,

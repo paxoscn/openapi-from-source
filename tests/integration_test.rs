@@ -1,4 +1,4 @@
-use rust_openapi_generator::{
+use openapi_generator::{
     detector::FrameworkDetector,
     extractor::{actix::ActixExtractor, axum::AxumExtractor, RouteExtractor},
     openapi_builder::OpenApiBuilder,
@@ -49,7 +49,7 @@ fn test_axum_end_to_end_generation() {
     // Step 3: Detect framework
     let detection = FrameworkDetector::detect(&parsed_files);
     assert!(
-        detection.frameworks.contains(&rust_openapi_generator::cli::Framework::Axum),
+        detection.frameworks.contains(&openapi_generator::cli::Framework::Axum),
         "Should detect Axum framework"
     );
     
@@ -124,7 +124,7 @@ fn test_actix_end_to_end_generation() {
     // Step 3: Detect framework
     let detection = FrameworkDetector::detect(&parsed_files);
     assert!(
-        detection.frameworks.contains(&rust_openapi_generator::cli::Framework::ActixWeb),
+        detection.frameworks.contains(&openapi_generator::cli::Framework::ActixWeb),
         "Should detect Actix-Web framework"
     );
     
@@ -253,7 +253,7 @@ fn test_request_body_extraction() {
     // Find POST route which should have request body
     let post_route = routes.iter().find(|r| {
         r.path.contains("/users") && 
-        matches!(r.method, rust_openapi_generator::extractor::HttpMethod::Post)
+        matches!(r.method, openapi_generator::extractor::HttpMethod::Post)
     });
     
     assert!(post_route.is_some(), "Should find POST /users route");
@@ -397,8 +397,8 @@ fn test_multiple_http_methods_same_path() {
             .collect();
         
         // Verify different methods exist
-        let has_get = methods.iter().any(|m| matches!(m, rust_openapi_generator::extractor::HttpMethod::Get));
-        let has_post = methods.iter().any(|m| matches!(m, rust_openapi_generator::extractor::HttpMethod::Post));
+        let has_get = methods.iter().any(|m| matches!(m, openapi_generator::extractor::HttpMethod::Get));
+        let has_post = methods.iter().any(|m| matches!(m, openapi_generator::extractor::HttpMethod::Post));
         
         assert!(has_get || has_post, "Should have GET or POST method for /users");
     }
@@ -420,7 +420,7 @@ fn test_response_type_extraction() {
     // Find GET /users route - should return Json<Vec<User>>
     let get_users_route = routes.iter().find(|r| {
         r.path == "/users" && 
-        matches!(r.method, rust_openapi_generator::extractor::HttpMethod::Get) &&
+        matches!(r.method, openapi_generator::extractor::HttpMethod::Get) &&
         r.handler_name == "get_users"
     });
     
@@ -435,7 +435,7 @@ fn test_response_type_extraction() {
     // Find GET /users/:id route - should return Json<User>
     let get_user_route = routes.iter().find(|r| {
         r.path.contains(":id") && 
-        matches!(r.method, rust_openapi_generator::extractor::HttpMethod::Get) &&
+        matches!(r.method, openapi_generator::extractor::HttpMethod::Get) &&
         r.handler_name == "get_user"
     });
     
@@ -450,7 +450,7 @@ fn test_response_type_extraction() {
     // Find POST /users route - should return Json<User>
     let create_user_route = routes.iter().find(|r| {
         r.path == "/users" && 
-        matches!(r.method, rust_openapi_generator::extractor::HttpMethod::Post) &&
+        matches!(r.method, openapi_generator::extractor::HttpMethod::Post) &&
         r.handler_name == "create_user"
     });
     

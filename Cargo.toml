@@ -2,6 +2,7 @@
 name = "rust-openapi-generator"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/paxoscn/openapi-from-source.git"
 
 [lib]
 name = "rust_openapi_generator"

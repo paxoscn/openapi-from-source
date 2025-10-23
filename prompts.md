@@ -1,2 +1,6 @@
 一个命令行OpenAPI文档生成工具. 传入一个Rust项目目录, 遍历其子目录寻找所有的路由配置, 生成OpenAPI yaml或json文档. 支持Axum和Actix-Web项目
 
+对于Axum项目, 需要从handler方法的返回值里解析出JSON响应的数据结构
+
+AxumVisitor和ActixVisitor的functions需要来自所有文件而不是当前文件
+

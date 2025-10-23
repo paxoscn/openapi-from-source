@@ -1,18 +1,24 @@
-use crate::extractor::{HttpMethod, Parameter, ParameterLocation, RouteExtractor, RouteInfo, TypeInfo};
+use crate::extractor::{
+    HttpMethod, Parameter, ParameterLocation, RouteExtractor, RouteInfo, TypeInfo,
+};
 use crate::parser::ParsedFile;
-use syn::{Attribute, Expr, Lit, Meta, visit::Visit};
+use syn::{visit::Visit, Attribute, Expr, Lit, Meta};
 
 /// Actix-Web route extractor
 pub struct ActixExtractor;
 
 impl RouteExtractor for ActixExtractor {
-    fn extract_routes(&self, parsed_file: &ParsedFile) -> Vec<RouteInfo> {
+    fn extract_routes(&self, parsed_files: &[ParsedFile]) -> Vec<RouteInfo> {
         let mut visitor = ActixVisitor::new();
-        visitor.visit_file(&parsed_file.syntax_tree);
-        
-        // After collecting routes and functions, analyze handlers
+
+        // First pass: collect all function signatures and routes from all files
+        for parsed_file in parsed_files {
+            visitor.visit_file(&parsed_file.syntax_tree);
+        }
+
+        // After collecting routes and functions from all files, analyze handlers
         visitor.analyze_handlers();
-        
+
         visitor.routes
     }
 }
@@ -32,23 +38,25 @@ impl ActixVisitor {
             functions: std::collections::HashMap::new(),
         }
     }
-    
+
     /// Analyze routes with handler information
     fn analyze_handlers(&mut self) {
         // Create a copy of routes to avoid borrow checker issues
-        let routes_to_update: Vec<_> = self.routes.iter()
+        let routes_to_update: Vec<_> = self
+            .routes
+            .iter()
             .enumerate()
             .map(|(idx, route)| (idx, route.handler_name.clone()))
             .collect();
-        
+
         for (idx, handler_name) in routes_to_update {
             if let Some(fn_sig) = self.functions.get(&handler_name) {
                 let (params, request_body) = self.parse_extractors(fn_sig);
-                
+
                 // Merge path parameters from URL with parameters from extractors
                 let mut all_params = self.routes[idx].parameters.clone();
                 all_params.extend(params);
-                
+
                 self.routes[idx].parameters = all_params;
                 self.routes[idx].request_body = request_body;
             }
@@ -58,7 +66,7 @@ impl ActixVisitor {
     /// Find and parse route macros (#[get], #[post], etc.)
     fn find_route_macros(&mut self, item_fn: &syn::ItemFn) {
         let fn_name = item_fn.sig.ident.to_string();
-        
+
         for attr in &item_fn.attrs {
             if let Some((method, path)) = self.parse_route_macro(attr) {
                 let full_path = self.combine_paths(&self.current_scope, &path);
@@ -73,10 +81,10 @@ impl ActixVisitor {
     fn parse_route_macro(&self, attr: &Attribute) -> Option<(HttpMethod, String)> {
         // Get the attribute path (e.g., "get", "post", etc.)
         let attr_name = attr.path().segments.last()?.ident.to_string();
-        
+
         // Parse HTTP method from attribute name
         let method = self.parse_http_method(&attr_name)?;
-        
+
         // Extract the path from the attribute arguments
         // Actix macros look like: #[get("/path")]
         let path = match &attr.meta {
@@ -86,7 +94,7 @@ impl ActixVisitor {
             }
             _ => None,
         }?;
-        
+
         Some((method, path))
     }
 
@@ -120,10 +128,10 @@ impl ActixVisitor {
         if scope.is_empty() {
             return path.to_string();
         }
-        
+
         let scope = scope.trim_end_matches('/');
         let path = path.trim_start_matches('/');
-        
+
         if path.is_empty() {
             scope.to_string()
         } else {
@@ -134,10 +142,13 @@ impl ActixVisitor {
     /// Extract path parameters from a route path (e.g., "/users/{id}" -> Parameter{name: "id"})
     fn extract_path_parameters(&self, path: &str) -> Vec<Parameter> {
         let mut parameters = Vec::new();
-        
+
         for segment in path.split('/') {
             if segment.starts_with('{') && segment.ends_with('}') {
-                let param_name = segment.trim_start_matches('{').trim_end_matches('}').to_string();
+                let param_name = segment
+                    .trim_start_matches('{')
+                    .trim_end_matches('}')
+                    .to_string();
                 parameters.push(Parameter::new(
                     param_name,
                     ParameterLocation::Path,
@@ -146,7 +157,7 @@ impl ActixVisitor {
                 ));
             }
         }
-        
+
         parameters
     }
 
@@ -158,7 +169,8 @@ impl ActixVisitor {
         for input in &fn_sig.inputs {
             if let syn::FnArg::Typed(pat_type) = input {
                 // Extract type information
-                if let Some((extractor_type, inner_type)) = self.parse_extractor_type(&pat_type.ty) {
+                if let Some((extractor_type, inner_type)) = self.parse_extractor_type(&pat_type.ty)
+                {
                     match extractor_type.as_str() {
                         "Json" => {
                             // web::Json<T> is a request body
@@ -196,7 +208,7 @@ impl ActixVisitor {
         if let syn::Type::Path(type_path) = ty {
             if let Some(segment) = type_path.path.segments.last() {
                 let extractor_name = segment.ident.to_string();
-                
+
                 // Check if this is a known extractor
                 if matches!(extractor_name.as_str(), "Json" | "Path" | "Query") {
                     // Extract the generic type argument
@@ -218,7 +230,7 @@ impl ActixVisitor {
             syn::Type::Path(type_path) => {
                 if let Some(segment) = type_path.path.segments.last() {
                     let type_name = segment.ident.to_string();
-                    
+
                     // Check for Option<T>
                     if type_name == "Option" {
                         if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
@@ -228,7 +240,7 @@ impl ActixVisitor {
                             }
                         }
                     }
-                    
+
                     // Check for Vec<T>
                     if type_name == "Vec" {
                         if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
@@ -238,7 +250,7 @@ impl ActixVisitor {
                             }
                         }
                     }
-                    
+
                     // Simple type
                     TypeInfo::new(type_name)
                 } else {
@@ -255,32 +267,32 @@ impl<'ast> Visit<'ast> for ActixVisitor {
         // Store function signatures for later analysis
         let fn_name = node.sig.ident.to_string();
         self.functions.insert(fn_name, node.sig.clone());
-        
+
         // Look for route macros on this function
         self.find_route_macros(node);
-        
+
         // Continue visiting child nodes
         syn::visit::visit_item_fn(self, node);
     }
-    
+
     fn visit_expr_method_call(&mut self, node: &'ast syn::ExprMethodCall) {
         let method_name = node.method.to_string();
-        
+
         // Check for .scope() method calls
         if method_name == "scope" {
             if let Some(scope_path) = self.extract_scope_path(node) {
                 let old_scope = self.current_scope.clone();
                 self.current_scope = self.combine_paths(&old_scope, &scope_path);
-                
+
                 // Visit the nested expression with the new scope
                 syn::visit::visit_expr_method_call(self, node);
-                
+
                 // Restore the old scope
                 self.current_scope = old_scope;
                 return;
             }
         }
-        
+
         // Continue visiting child nodes
         syn::visit::visit_expr_method_call(self, node);
     }
@@ -312,7 +324,6 @@ impl ActixVisitor {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -339,7 +350,7 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
         assert_eq!(routes[0].path, "/hello");
@@ -380,10 +391,10 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 5);
-        
+
         let methods: Vec<_> = routes.iter().map(|r| &r.method).collect();
         assert!(methods.contains(&&HttpMethod::Get));
         assert!(methods.contains(&&HttpMethod::Post));
@@ -405,7 +416,7 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
         assert_eq!(routes[0].path, "/users/{id}");
@@ -428,13 +439,17 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
         assert_eq!(routes[0].path, "/posts/{post_id}/comments/{comment_id}");
         assert_eq!(routes[0].parameters.len(), 2);
-        
-        let param_names: Vec<_> = routes[0].parameters.iter().map(|p| p.name.as_str()).collect();
+
+        let param_names: Vec<_> = routes[0]
+            .parameters
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect();
         assert!(param_names.contains(&"post_id"));
         assert!(param_names.contains(&"comment_id"));
     }
@@ -465,13 +480,13 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         // Note: The current implementation extracts routes from function definitions
         // The scope is tracked when visiting method calls, but routes are already defined
         // So we should see the routes without the scope prefix in this simple case
         assert_eq!(routes.len(), 2);
-        
+
         // Verify both routes are found
         let paths: Vec<_> = routes.iter().map(|r| r.path.as_str()).collect();
         assert!(paths.contains(&"/users"));
@@ -498,11 +513,11 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
         assert_eq!(routes[0].handler_name, "create_user");
-        
+
         // Check for request body
         assert!(routes[0].request_body.is_some());
         if let Some(ref body) = routes[0].request_body {
@@ -523,12 +538,14 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
-        
+
         // Should have path parameters from both URL and extractor
-        let path_params: Vec<_> = routes[0].parameters.iter()
+        let path_params: Vec<_> = routes[0]
+            .parameters
+            .iter()
             .filter(|p| p.location == ParameterLocation::Path)
             .collect();
         assert!(!path_params.is_empty());
@@ -554,16 +571,18 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
-        
+
         // Check for query parameters
-        let query_params: Vec<_> = routes[0].parameters.iter()
+        let query_params: Vec<_> = routes[0]
+            .parameters
+            .iter()
             .filter(|p| p.location == ParameterLocation::Query)
             .collect();
         assert!(!query_params.is_empty());
-        
+
         if let Some(param) = query_params.first() {
             assert_eq!(param.type_info.name, "Pagination");
         }
@@ -591,16 +610,18 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
-        
+
         // Should have path parameters
-        let path_params: Vec<_> = routes[0].parameters.iter()
+        let path_params: Vec<_> = routes[0]
+            .parameters
+            .iter()
             .filter(|p| p.location == ParameterLocation::Path)
             .collect();
         assert!(!path_params.is_empty());
-        
+
         // Should have request body
         assert!(routes[0].request_body.is_some());
         if let Some(ref body) = routes[0].request_body {
@@ -631,7 +652,7 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
         assert_eq!(routes[0].path, "/profile");
@@ -650,7 +671,7 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
         assert_eq!(routes[0].path, "/health");
@@ -672,13 +693,20 @@ mod tests {
 
         let parsed = parse_code(code);
         let extractor = ActixExtractor;
-        let routes = extractor.extract_routes(&parsed);
+        let routes = extractor.extract_routes(&[parsed]);
 
         assert_eq!(routes.len(), 1);
-        assert_eq!(routes[0].path, "/api/v1/organizations/{org_id}/projects/{project_id}/tasks/{task_id}");
+        assert_eq!(
+            routes[0].path,
+            "/api/v1/organizations/{org_id}/projects/{project_id}/tasks/{task_id}"
+        );
         assert_eq!(routes[0].parameters.len(), 3);
-        
-        let param_names: Vec<_> = routes[0].parameters.iter().map(|p| p.name.as_str()).collect();
+
+        let param_names: Vec<_> = routes[0]
+            .parameters
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect();
         assert!(param_names.contains(&"org_id"));
         assert!(param_names.contains(&"project_id"));
         assert!(param_names.contains(&"task_id"));

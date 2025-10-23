@@ -189,15 +189,10 @@ pub fn run(args: CliArgs) -> Result<()> {
             Framework::ActixWeb => Box::new(ActixExtractor),
         };
         
-        for parsed_file in &parsed_files {
-            let routes = extractor.extract_routes(parsed_file);
-            debug!(
-                "Extracted {} routes from {}",
-                routes.len(),
-                parsed_file.path.display()
-            );
-            all_routes.extend(routes);
-        }
+        // Extract routes from all files at once (extractor needs access to all functions)
+        let routes = extractor.extract_routes(&parsed_files);
+        debug!("Extracted {} routes for {:?}", routes.len(), framework);
+        all_routes.extend(routes);
     }
     
     info!("Extracted {} total routes", all_routes.len());

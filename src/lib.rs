@@ -50,10 +50,7 @@
 //!
 //! // Extract routes
 //! let extractor = AxumExtractor;
-//! let mut routes = Vec::new();
-//! for file in &parsed_files {
-//!     routes.extend(extractor.extract_routes(file));
-//! }
+//! let routes = extractor.extract_routes(&parsed_files);
 //!
 //! // Build OpenAPI document
 //! let type_resolver = TypeResolver::new(parsed_files);

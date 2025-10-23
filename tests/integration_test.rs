@@ -55,10 +55,7 @@ fn test_axum_end_to_end_generation() {
     
     // Step 4: Extract routes
     let extractor = AxumExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     assert!(!routes.is_empty(), "Should extract routes");
     
@@ -133,10 +130,7 @@ fn test_actix_end_to_end_generation() {
     
     // Step 4: Extract routes
     let extractor = ActixExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     assert!(!routes.is_empty(), "Should extract routes");
     
@@ -185,10 +179,7 @@ fn test_openapi_document_structure() {
     let parsed_files: Vec<_> = parse_results.into_iter().filter_map(Result::ok).collect();
     
     let extractor = AxumExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     let type_resolver = TypeResolver::new(parsed_files);
     let mut schema_gen = SchemaGenerator::new(type_resolver);
@@ -234,10 +225,7 @@ fn test_route_parameters_extraction() {
     let parsed_files: Vec<_> = parse_results.into_iter().filter_map(Result::ok).collect();
     
     let extractor = AxumExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     // Find route with path parameter
     let user_by_id_route = routes.iter().find(|r| r.path.contains(":id"));
@@ -260,10 +248,7 @@ fn test_request_body_extraction() {
     let parsed_files: Vec<_> = parse_results.into_iter().filter_map(Result::ok).collect();
     
     let extractor = ActixExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     // Find POST route which should have request body
     let post_route = routes.iter().find(|r| {
@@ -293,10 +278,7 @@ fn test_yaml_serialization_format() {
     let parsed_files: Vec<_> = parse_results.into_iter().filter_map(Result::ok).collect();
     
     let extractor = AxumExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     let type_resolver = TypeResolver::new(parsed_files);
     let mut schema_gen = SchemaGenerator::new(type_resolver);
@@ -332,10 +314,7 @@ fn test_json_serialization_format() {
     let parsed_files: Vec<_> = parse_results.into_iter().filter_map(Result::ok).collect();
     
     let extractor = ActixExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     let type_resolver = TypeResolver::new(parsed_files);
     let mut schema_gen = SchemaGenerator::new(type_resolver);
@@ -376,10 +355,7 @@ fn test_empty_project_handling() {
     let parsed_files: Vec<_> = parse_results.into_iter().filter_map(Result::ok).collect();
     
     let extractor = AxumExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     // Should handle empty projects gracefully
     assert!(routes.is_empty(), "Empty project should have no routes");
@@ -407,10 +383,7 @@ fn test_multiple_http_methods_same_path() {
     let parsed_files: Vec<_> = parse_results.into_iter().filter_map(Result::ok).collect();
     
     let extractor = AxumExtractor;
-    let mut routes = Vec::new();
-    for file in &parsed_files {
-        routes.extend(extractor.extract_routes(file));
-    }
+    let routes = extractor.extract_routes(&parsed_files);
     
     // Find routes for /users path
     let users_routes: Vec<_> = routes.iter()
@@ -428,5 +401,76 @@ fn test_multiple_http_methods_same_path() {
         let has_post = methods.iter().any(|m| matches!(m, rust_openapi_generator::extractor::HttpMethod::Post));
         
         assert!(has_get || has_post, "Should have GET or POST method for /users");
+    }
+}
+
+#[test]
+fn test_response_type_extraction() {
+    let axum_code = include_str!("fixtures/axum_project.rs");
+    let temp_dir = create_test_project(vec![("src/main.rs", axum_code)]);
+    
+    let scanner = FileScanner::new(temp_dir.path().to_path_buf());
+    let scan_result = scanner.scan().expect("Failed to scan");
+    let parse_results = AstParser::parse_files(&scan_result.rust_files);
+    let parsed_files: Vec<_> = parse_results.into_iter().filter_map(Result::ok).collect();
+    
+    let extractor = AxumExtractor;
+    let routes = extractor.extract_routes(&parsed_files);
+    
+    // Find GET /users route - should return Json<Vec<User>>
+    let get_users_route = routes.iter().find(|r| {
+        r.path == "/users" && 
+        matches!(r.method, rust_openapi_generator::extractor::HttpMethod::Get) &&
+        r.handler_name == "get_users"
+    });
+    
+    if let Some(route) = get_users_route {
+        assert!(route.response_type.is_some(), "GET /users should have response type");
+        if let Some(ref response) = route.response_type {
+            assert!(response.is_vec, "Response should be a Vec");
+            assert_eq!(response.name, "User", "Response should be Vec<User>");
+        }
+    }
+    
+    // Find GET /users/:id route - should return Json<User>
+    let get_user_route = routes.iter().find(|r| {
+        r.path.contains(":id") && 
+        matches!(r.method, rust_openapi_generator::extractor::HttpMethod::Get) &&
+        r.handler_name == "get_user"
+    });
+    
+    if let Some(route) = get_user_route {
+        assert!(route.response_type.is_some(), "GET /users/:id should have response type");
+        if let Some(ref response) = route.response_type {
+            assert!(!response.is_vec, "Response should not be a Vec");
+            assert_eq!(response.name, "User", "Response should be User");
+        }
+    }
+    
+    // Find POST /users route - should return Json<User>
+    let create_user_route = routes.iter().find(|r| {
+        r.path == "/users" && 
+        matches!(r.method, rust_openapi_generator::extractor::HttpMethod::Post) &&
+        r.handler_name == "create_user"
+    });
+    
+    if let Some(route) = create_user_route {
+        assert!(route.response_type.is_some(), "POST /users should have response type");
+        if let Some(ref response) = route.response_type {
+            assert_eq!(response.name, "User", "Response should be User");
+        }
+    }
+    
+    // Find health check route - should return &'static str
+    let health_route = routes.iter().find(|r| {
+        r.path.contains("health") && 
+        r.handler_name == "health_check"
+    });
+    
+    if let Some(route) = health_route {
+        assert!(route.response_type.is_some(), "Health check should have response type");
+        if let Some(ref response) = route.response_type {
+            assert_eq!(response.name, "str", "Response should be str");
+        }
     }
 }

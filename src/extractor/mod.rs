@@ -18,7 +18,7 @@
 //!
 //! let parsed = AstParser::parse_file(Path::new("src/main.rs")).unwrap();
 //! let extractor = AxumExtractor;
-//! let routes = extractor.extract_routes(&parsed);
+//! let routes = extractor.extract_routes(&[parsed]);
 //! println!("Found {} routes", routes.len());
 //! ```
 
@@ -32,16 +32,16 @@ use crate::parser::ParsedFile;
 /// Implementations of this trait know how to analyze the AST of a specific web framework
 /// and extract route definitions, including paths, HTTP methods, parameters, and type information.
 pub trait RouteExtractor {
-    /// Extracts all route information from a parsed Rust file.
+    /// Extracts all route information from parsed Rust files.
     ///
     /// # Arguments
     ///
-    /// * `parsed_file` - A successfully parsed Rust source file
+    /// * `parsed_files` - All successfully parsed Rust source files in the project
     ///
     /// # Returns
     ///
-    /// Returns a vector of `RouteInfo` structs, one for each discovered route.
-    fn extract_routes(&self, parsed_file: &ParsedFile) -> Vec<RouteInfo>;
+    /// Returns a vector of `RouteInfo` structs, one for each discovered route across all files.
+    fn extract_routes(&self, parsed_files: &[ParsedFile]) -> Vec<RouteInfo>;
 }
 
 /// Complete information about a single API endpoint.

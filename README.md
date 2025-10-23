@@ -231,6 +231,26 @@ If schemas are incomplete:
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
 
+## Releasing & Publishing
+
+### Releasing
+
+```bash
+cargo install cargo-dist --locked
+dist init --yes
+# Make sure that the version under [package] in Cargo.toml is the same as the tag below.
+git tag vX.X.X
+git push --tags
+# Go to Actions on Github to check the result.
+```
+
+### Publishing
+
+```bash
+cargo login --registry crates-io
+cargo publish --registry crates-io
+```
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
